@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <filesystem>
+#include <algorithm>
 using namespace std;
 
 class bPlusTree {
@@ -51,9 +52,32 @@ class bPlusTree {
         Node(const float& k, const string&  n, const string& c, const string& p, const string& room, const string& rev, const string& ac, const string& bath, const string& bedroom, const string& bed, const string& a) {
             keys.push_back(k);
             bnbs.push_back(listing(n, c, p, room, rev, ac, bath, bedroom, bed, a));
-            isLeaf = true; //check this
+            isLeaf = true;
             next = nullptr;
             parent = nullptr;
+        }
+        Node(Node* p, vector<listing> b, vector<float> k, vector<Node*> c) {
+            parent = p;
+            bnbs = b;
+            keys = k;
+            children = c;
+            next = nullptr;
+            isLeaf = false;
+        }
+        Node(Node* p, vector<listing> b, vector<float> k) {
+            parent = p;
+            bnbs = b;
+            keys = k;
+            children = {};
+            next = nullptr;
+            isLeaf = true;
+        }
+        bool operator<(const Node* other) const {
+            //return age < other.age;
+            return keys[0] < other->keys[0];
+        }
+        void insert(const int& i, const string&  n, const string& c, const string& p, const string& room, const string& rev, const string& ac, const string& bath, const string& bedroom, const string& bed, const string& a) {
+            bnbs.insert(bnbs.begin()+i, listing(n, c, p, room, rev, ac, bath, bedroom, bed, a));
         }
 
 
@@ -62,48 +86,53 @@ class bPlusTree {
     Node* head; // linked list
     string sortKey; // either "price", "bedrooms", or "bathrooms"
     int num; //max num of nodes (n-ary)
+    string fileName;
 
-public:
-    bPlusTree(const int& n, const string& key, string fileName) {
-        root = nullptr;
-        head = nullptr;
-        sortKey = key;
-        num = n;
-        ifstream file(fileName);
+    void buildTree(string f) {
+        ifstream file(f);
         if (!file.is_open()) {
             cout<< "Error: file not open"<< endl;
         } else {
             string row;
+            int i=0;
             while (getline(file, row)) {
                 stringstream s(row);
-                string id, name, city, price, room, reviews, ac, bathCount, bedroomCount, bedCount, area;
-                getline(s, id, ',');
-                getline(s, name, ',');
-                getline(s, city, ',');
-                getline(s, price, ',');
-                getline(s, room, ',');
-                getline(s, reviews, ',');
-                getline(s, ac, ',');
-                getline(s, bathCount, ',');
-                getline(s, bedroomCount, ',');
-                getline(s, bedCount, ',');
-                getline(s, area, ',');
-                insert(name, city, price, room, reviews, ac, bathCount, bedroomCount, bedCount, area);
+                if (i == 0) {
+                    i++; //initial row is headers
+                } else {
+                    string id, name, city, price, room, reviews, ac, bathCount, bedroomCount, bedCount, area;
+                    getline(s, id, ',');
+                    getline(s, name, ',');
+                    getline(s, city, ',');
+                    getline(s, price, ',');
+                    getline(s, room, ',');
+                    getline(s, reviews, ',');
+                    getline(s, ac, ',');
+                    getline(s, bathCount, ',');
+                    getline(s, bedroomCount, ',');
+                    getline(s, bedCount, ',');
+                    getline(s, area, ',');
+                    insert(name, city, price, room, reviews, ac, bathCount, bedroomCount, bedCount, area);
+                }
+
             }
         }
-
-
     }
-    ~bPlusTree() {
-        Node* cur = head;
-        Node* next;
-        while (cur != nullptr) {
-            next = cur->next;
-            delete cur;
-            cur = next;
-        }
+
+public:
+    bPlusTree(const int& n, const string& key, string f) {
+        fileName = f;
         root = nullptr;
         head = nullptr;
+        sortKey = key;
+        num = n;
+        buildTree(fileName);
+    }
+    ~bPlusTree() {
+        for (Node* n: allNodes()) {
+            delete n;
+            n = nullptr;
+        }
     }
     //sets the actual key to sort by:
     //price, bedrooms, or bathrooms --> chosen by user
@@ -111,9 +140,83 @@ public:
         sortKey = s;
         reSort();
     }
+    //insert helper functions: insertNode, insertionIndex, balance
+    Node* insertNode(Node* parent, vector<Node::listing>& bnbs, vector<float>& keys, vector<Node*>& children) {
+        //add child node to 'parent' with preexisting children 'children'
+        int index = -1;
+        for (int i=0; i<parent->children.size(); i++) {
+            if (keys[0] < parent->children[i]->keys[0]) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) {
+            index = parent->children.size();
+        }
+        parent->children.insert(parent->children.begin() + index, new Node(parent, bnbs, keys, children));
+        sort(parent->children.begin(), parent->children.end());
+        return parent->children[index];
+    }
+    Node* insertNode(Node* parent, vector<Node::listing>& bnbs, vector<float>& keys) {
+        //add leaf node to 'parent', check number of children in 'parent'
+        Node* newNode = new Node(parent, bnbs, keys);
+        parent->children.push_back(newNode);
+        sort(parent->children.begin(), parent->children.end());
+        return newNode;
+    }
+    int insertionIndex(vector<float> keys, float k) {
+        for (int i = 0; i < keys.size(); i++) {
+            if (k < keys[i]) {
+                return i;
+            }
+        }
+        return keys.size();
+    }
     void balance(Node* cur) {
-        //potentially recursive, look into how we'd do this
-        //look at examples or write out/say logic
+        if (cur->keys.size() == num) {
+            vector<float> lastKeys(cur->keys.begin()+ cur->keys.size()/2, cur->keys.end()); // <--used for splitting keys
+            vector<float> firstKeys(cur->keys.begin(), cur->keys.begin()+ cur->keys.size()/2); // <--used for splitting keys
+            vector<Node::listing> lastBnbs(cur->bnbs.begin()+ cur->bnbs.size()/2, cur->bnbs.end());
+            vector<Node::listing> firstBnbs(cur->bnbs.begin(), cur->bnbs.begin()+ cur->bnbs.size()/2);
+
+            if (root == head) {
+                //split node in half, middle goes up to become root
+                //set leaves to be LL
+                cur->keys = {lastKeys[0]};
+                cur->bnbs = {lastBnbs[0]};
+                cur->isLeaf = false;
+                head = insertNode(cur, firstBnbs, firstKeys);
+                head->next = insertNode(cur, lastBnbs, lastKeys);
+            } else if (cur->isLeaf) {
+                int i = insertionIndex(cur->parent->keys, lastKeys[0]);
+                cur->parent->keys.insert(cur->parent->keys.begin() + i, lastKeys[0]);
+                cur->parent->bnbs.insert(cur->parent->bnbs.begin() + i, lastBnbs[0]);
+                cur->keys = firstKeys;
+                cur->bnbs = firstBnbs;
+                Node* thirdNode = cur->next;
+                cur->next = insertNode(cur->parent, lastBnbs, lastKeys);
+                cur->next->next = thirdNode;
+            } else if (cur == root) {
+                vector<Node*> firstKids(cur->children.begin(), cur->children.begin()+ cur->children.size()/2);
+                vector<Node*> lastKids(cur->children.begin()+ cur->children.size()/2 +1, cur->children.end());
+                cur->keys = {cur->keys[cur->keys.size()/2]};
+                cur->children = {};
+                cur->children.push_back(insertNode(cur, firstBnbs, firstKeys, firstKids));
+                cur->children.push_back(insertNode(cur, lastBnbs, lastKeys, lastKids));
+            } else {
+                vector<Node*> firstKids(cur->children.begin(), cur->children.begin()+ cur->children.size()/2);
+                vector<Node*> lastKids(cur->children.begin()+ cur->children.size()/2 +1, cur->children.end());
+                int i = insertionIndex(cur->parent->keys, lastKeys[0]);
+                cur->parent->keys.insert(cur->parent->keys.begin() + i, cur->keys[cur->keys.size()/2]);
+                cur->parent->bnbs.insert(cur->parent->bnbs.begin() + i, cur->bnbs[cur->bnbs.size()/2]);
+
+                cur->keys = firstKeys;
+                cur->bnbs = firstBnbs;
+                cur->children = firstKids;
+                insertNode(cur->parent, lastBnbs, lastKeys, lastKids);
+            }
+            balance(cur->parent);
+        }
     }
     bool insert(const string&  n, const string& c, const string& p, const string& room, const string& rev, string ac, const string& bath, const string& bedroom, const string& bed, const string& a) {
         float key;
@@ -176,10 +279,12 @@ public:
         for (int i = 0; i< curNode->keys.size(); i++) {
             if (key <= i) {
                 curNode->keys.insert(curNode->keys.begin()+i, key);
+                curNode->insert(i, n, c, p, room, rev, ac, bath, bedroom, bed, a);
                 balance(curNode);
                 return true;
             }else if ((key > i) && (i == curNode->keys.size())) {
                 curNode->keys.insert(curNode->keys.begin() +curNode->keys.size(), key);
+                curNode->insert(curNode->keys.size(), n, c, p, room, rev, ac, bath, bedroom, bed, a);
                 balance(curNode);
                 return true;
             }
@@ -188,6 +293,7 @@ public:
         cout<< "Insert error: something went wrong, insertion not completed."<< endl;
         return false;
     }
+
     void inOrderLL() {
         //node root has vector of node keys
         Node* curr = root;
@@ -200,17 +306,28 @@ public:
             root = root->next;
         }
     }
-
-    void reSort() {
-        //literally resorts all the nodes based on new sortKey
-        cout<< "Re-sorting !"<< endl;
-        //try doing something that iterates through tree changing keys for each node
-        //then call a rebalance function or something after each iteration
+    vector<Node*> allNodes() {
+        //traverses through all nodes
+        return {nullptr};
     }
-
-    float search(float n) {
-        return 0.0;
-        //figure this out diva
+    void reSort() {
+        cout<< "Re-sorting !"<< endl;
+        for (Node* n: allNodes()) {
+            delete n;
+            n = nullptr;
+        }
+        buildTree(fileName);
+    }
+    vector<Node::listing> search(string location) {
+        vector<Node::listing> match;
+        for (Node* n: allNodes()) {
+            for (Node::listing bnb: n->bnbs) {
+                if (location == bnb.area) { //CONFIRM LOCATION VALUE
+                    match.push_back(bnb);
+                }
+            }
+        }
+        return match;
     }
 };
 
@@ -218,5 +335,6 @@ public:
 int main() {
     // bPlusTree testing(3, "price", "testingCSV.csv");
     // testing.inOrderLL();
+    cout<< "test";
     return 0;
 }
