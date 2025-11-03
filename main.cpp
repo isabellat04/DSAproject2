@@ -374,67 +374,85 @@ class MinHeapStruct {
             }
         }
 
-        void findKthLargestPrice(int k) {
+        vector<Property_Listing> findKthLargestPrice(int k) {
+            vector<Property_Listing> largest_holder;
+            if (k == 0 || k > currHeap.size()) {
+                cout << "Please input a number greater than 0 or less than number of entries" << endl;
+                return largest_holder;
+            }
             heapSortDescendingPrice(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int count_switch = 1;
-            int index = 1;
+            int placeHolder = -1;
+            int count_switch = 0;
+            int index = 0;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].price != temp.price) {
+                if (currHeap[index].price != placeHolder) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
+                    placeHolder = currHeap[index].price;
                 }
 
                 if (count_switch == k) {
-                    cout << temp.price << endl;
+                    largest_holder.push_back(currHeap[index]);
+                    //cout << temp.price << endl;
                 }
                 index++;
             }
-            if ((count_switch-1) != k) {
-                cout << "Couldn't find the kth largest price" << endl;
-            }
+            return largest_holder;
         }
 
-        void findKthLargestBathroom(int k) {
+        vector<Property_Listing> findKthLargestBathroom(int k) {
+            vector<Property_Listing> largest_holder;
+            if (k == 0 || k > currHeap.size()) {
+                cout << "Please input a number greater than 0 or less than number of entries" << endl;
+                return largest_holder;
+            }
             heapSortDescendingBathrooms(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int count_switch = 1;
-            int index = 1;
+            int placeHolder = -1;
+            int count_switch = 0;
+            int index = 0;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].bathrooms != temp.bathrooms) {
+                if (currHeap[index].bathrooms != placeHolder) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
+                    placeHolder = currHeap[index].bathrooms;
                 }
 
                 if (count_switch == k) {
-                    cout << temp.bathrooms << endl;
+                    largest_holder.push_back(currHeap[index]);
+                    //cout << temp.bathrooms << endl;
                 }
                 index++;
             }
-            if ((count_switch-1) != k) {
-                cout << "Couldn't find the kth largest number of bathrooms" << endl;
-            }
+            return largest_holder;
         }
 
-        void findKthLargestBedrooms(int k) {
+        vector<Property_Listing> findKthLargestBedrooms(int k) {
+            vector<Property_Listing> largest_holder;
+            if (k == 0 || k > currHeap.size()) {
+                cout << "Please input a number greater than 0 or less than number of entries" << endl;
+                return largest_holder;
+            }
             heapSortDescendingBedrooms(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int count_switch = 1;
-            int index = 1;
+            int placeHolder = -1;
+            int count_switch = 0;
+            int index = 0;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].bedrooms != temp.bedrooms) {
+                if (currHeap[index].bedrooms != placeHolder) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
+                    placeHolder = currHeap[index].bedrooms;
                 }
 
                 if (count_switch == k) {
-                    cout << temp.bedrooms << endl;
+                    largest_holder.push_back(currHeap[index]);
+                    //cout << temp.bedrooms << endl;
                 }
                 index++;
             }
-            if ((count_switch-1) != k) {
-                cout << "Couldn't find the kth largest number of bedrooms" << endl;
-            }
+            return largest_holder;
         }
 
         int getCurrentSize() {
@@ -527,14 +545,17 @@ int main() {
     //    cout << minHeap[i].price << endl;
     //}
 
-    minHeapStruct.heapSortAscendingPrice();
+    minHeapStruct.heapSortAscendingBedrooms();
     //minHeapStruct.heapSortDescendingPrice(); // test if global heap is changing according to commands called
     vector<Property_Listing> minHeap = minHeapStruct.getCurrentHeap();
     for (int i = 0; i < minHeapStruct.getCurrentSize(); i++) {
-        cout << minHeap[i].price << endl;
+        cout << minHeap[i].bedrooms << endl;
     }
 
-    minHeapStruct.findKthLargestBedrooms(2);
+    vector<Property_Listing> store_largest_nth = minHeapStruct.findKthLargestBedrooms(2);
+    for (int i = 0; i < store_largest_nth.size(); i++) {
+        cout << store_largest_nth[i].bedrooms << endl;
+    }
     //return 0;
 }
 
