@@ -5,7 +5,7 @@
 #include <algorithm>
 using namespace std;
 
-class bPlusTree {
+class bPlusTreeOG {
     struct Node {
         //individual keys + listings
         struct listing {
@@ -32,16 +32,6 @@ class bPlusTree {
                 bedCount = stoi(bed);
                 area = a;
             }
-            // listing() {
-            //     name = "";
-            //     city = "";
-            //     price = 0;
-            //     capacity = 0;
-            //     bathCount = 0;
-            //     bedroomCount = 0;
-            //     bedCount = 0;
-            //     area = "";
-            // }
         };
         vector<listing> bnbs; //elements in node
         vector<float> keys; //keys of elements, depends on user sorting
@@ -73,11 +63,11 @@ class bPlusTree {
             isLeaf = true;
         }
         bool operator<(const Node* other) const {
-            //return age < other.age;
             return keys[0] < other->keys[0];
         }
         void insert(const int& i, const string&  n, const string& c, const string& p, const string& room, const string& rev, const string& ac, const string& bath, const string& bedroom, const string& bed, const string& a) {
-            bnbs.insert(bnbs.begin()+i, listing(n, c, p, room, rev, ac, bath, bedroom, bed, a));
+            listing l(n, c, p, room, rev, ac, bath, bedroom, bed, a);
+            bnbs.insert(bnbs.begin()+i, l);
         }
 
 
@@ -99,7 +89,9 @@ class bPlusTree {
                 stringstream s(row);
                 if (i == 0) {
                     i++; //initial row is headers
-                } else {
+                } else if (row == "") {
+                    cout<< "Error: empty line, i = "<< i<< endl;
+                }else {
                     string id, name, city, price, room, reviews, ac, bathCount, bedroomCount, bedCount, area;
                     getline(s, id, ',');
                     getline(s, name, ',');
@@ -112,6 +104,7 @@ class bPlusTree {
                     getline(s, bedroomCount, ',');
                     getline(s, bedCount, ',');
                     getline(s, area, ',');
+                    cout<< name<< "   ";
                     insert(name, city, price, room, reviews, ac, bathCount, bedroomCount, bedCount, area);
                 }
 
@@ -120,7 +113,7 @@ class bPlusTree {
     }
 
 public:
-    bPlusTree(const int& n, const string& key, string f) {
+    bPlusTreeOG(const int& n, const string& key, string f) {
         fileName = f;
         root = nullptr;
         head = nullptr;
@@ -128,12 +121,25 @@ public:
         num = n;
         buildTree(fileName);
     }
-    ~bPlusTree() {
-        for (Node* n: allNodes()) {
-            delete n;
-            n = nullptr;
-        }
+    ~bPlusTreeOG() {
+        deleteSubTree(root);
+        root = nullptr;
+        head = nullptr;
     }
+
+    void deleteSubTree(Node* cur){
+        if (cur == nullptr) {
+            // base case? do nothing
+        } else {
+            for (Node* child: cur->children) {
+                deleteSubTree(child);
+            }
+            delete cur;
+            cur = nullptr;
+        }
+
+    }
+
     //sets the actual key to sort by:
     //price, bedrooms, or bathrooms --> chosen by user
     void sortBy(const string& s) {
@@ -153,6 +159,7 @@ public:
         if (index == -1) {
             index = parent->children.size();
         }
+        parent->isLeaf = false;
         parent->children.insert(parent->children.begin() + index, new Node(parent, bnbs, keys, children));
         sort(parent->children.begin(), parent->children.end());
         return parent->children[index];
@@ -160,11 +167,11 @@ public:
     Node* insertNode(Node* parent, vector<Node::listing>& bnbs, vector<float>& keys) {
         //add leaf node to 'parent', check number of children in 'parent'
         Node* newNode = new Node(parent, bnbs, keys);
+        parent->isLeaf = false;
         parent->children.push_back(newNode);
         sort(parent->children.begin(), parent->children.end());
         return newNode;
-    }
-    int insertionIndex(vector<float> keys, float k) {
+    }    int insertionIndex(vector<float> keys, float k) {
         for (int i = 0; i < keys.size(); i++) {
             if (k < keys[i]) {
                 return i;
@@ -306,26 +313,23 @@ public:
             root = root->next;
         }
     }
-    vector<Node*> allNodes() {
-        //traverses through all nodes
-        return {nullptr};
-    }
     void reSort() {
         cout<< "Re-sorting !"<< endl;
-        for (Node* n: allNodes()) {
-            delete n;
-            n = nullptr;
-        }
+        deleteSubTree(root);
+        root = nullptr;
+        head = nullptr;
         buildTree(fileName);
     }
     vector<Node::listing> search(string location) {
         vector<Node::listing> match;
-        for (Node* n: allNodes()) {
-            for (Node::listing bnb: n->bnbs) {
-                if (location == bnb.area) { //CONFIRM LOCATION VALUE
-                    match.push_back(bnb);
+        Node* cur = head;
+        while (cur != nullptr) {
+            for (Node::listing l: cur->bnbs) {
+                if (l.area == location) {
+                    match.push_back(l);
                 }
             }
+            cur = cur->next;
         }
         return match;
     }
