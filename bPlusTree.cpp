@@ -123,14 +123,11 @@ public:
     }
     ~bPlusTreeOG() {
         deleteSubTree(root);
-        root = nullptr;
-        head = nullptr;
+        //head = nullptr;
     }
 
     void deleteSubTree(Node* cur){
-        if (cur == nullptr) {
-            // base case? do nothing
-        } else {
+        if (cur != nullptr) {
             for (Node* child: cur->children) {
                 deleteSubTree(child);
             }
@@ -160,18 +157,27 @@ public:
             index = parent->children.size();
         }
         parent->isLeaf = false;
-        parent->children.insert(parent->children.begin() + index, new Node(parent, bnbs, keys, children));
-        sort(parent->children.begin(), parent->children.end());
-        return parent->children[index];
+        Node* n = new Node(parent, bnbs, keys, children);
+        return n;
     }
     Node* insertNode(Node* parent, vector<Node::listing>& bnbs, vector<float>& keys) {
-        //add leaf node to 'parent', check number of children in 'parent'
+        //add leaf node to 'parent'
+        int index = -1;
+        for (int i=0; i<parent->children.size(); i++) {
+            if (keys[0] < parent->children[i]->keys[0]) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) {
+            index = parent->children.size();
+        }
         Node* newNode = new Node(parent, bnbs, keys);
         parent->isLeaf = false;
-        parent->children.push_back(newNode);
-        sort(parent->children.begin(), parent->children.end());
+        parent->children.insert(parent->children.begin() + index, newNode);
         return newNode;
-    }    int insertionIndex(vector<float> keys, float k) {
+    }
+    int insertionIndex(vector<float> keys, float k) {
         for (int i = 0; i < keys.size(); i++) {
             if (k < keys[i]) {
                 return i;
@@ -179,22 +185,31 @@ public:
         }
         return keys.size();
     }
-    void balance(Node* cur) {
+    bool balance(Node* cur) {
         if (cur->keys.size() == num) {
+            cout<< "------------------Unbalanced------------------"<< endl;
             vector<float> lastKeys(cur->keys.begin()+ cur->keys.size()/2, cur->keys.end()); // <--used for splitting keys
             vector<float> firstKeys(cur->keys.begin(), cur->keys.begin()+ cur->keys.size()/2); // <--used for splitting keys
             vector<Node::listing> lastBnbs(cur->bnbs.begin()+ cur->bnbs.size()/2, cur->bnbs.end());
             vector<Node::listing> firstBnbs(cur->bnbs.begin(), cur->bnbs.begin()+ cur->bnbs.size()/2);
 
             if (root == head) {
+                cout<< "\nBase case root = head"<< endl;
                 //split node in half, middle goes up to become root
                 //set leaves to be LL
                 cur->keys = {lastKeys[0]};
                 cur->bnbs = {lastBnbs[0]};
                 cur->isLeaf = false;
                 head = insertNode(cur, firstBnbs, firstKeys);
+                head->isLeaf = true;
+                head->parent = cur;
                 head->next = insertNode(cur, lastBnbs, lastKeys);
+                head->next->isLeaf = true;
+                head->next->parent = cur;
+                balance(cur);
+                return true;
             } else if (cur->isLeaf) {
+                cout<< "Case cur = leaf"<< endl;
                 int i = insertionIndex(cur->parent->keys, lastKeys[0]);
                 cur->parent->keys.insert(cur->parent->keys.begin() + i, lastKeys[0]);
                 cur->parent->bnbs.insert(cur->parent->bnbs.begin() + i, lastBnbs[0]);
@@ -202,14 +217,23 @@ public:
                 cur->bnbs = firstBnbs;
                 Node* thirdNode = cur->next;
                 cur->next = insertNode(cur->parent, lastBnbs, lastKeys);
+                cur->next->isLeaf = true;
                 cur->next->next = thirdNode;
+                balance(cur->parent);
+                return true;
             } else if (cur == root) {
+                cout<< "Case cur = root\n"<< endl;
+
                 vector<Node*> firstKids(cur->children.begin(), cur->children.begin()+ cur->children.size()/2);
-                vector<Node*> lastKids(cur->children.begin()+ cur->children.size()/2 +1, cur->children.end());
+                vector<Node*> lastKids(cur->children.begin()+ cur->children.size()/2, cur->children.end());
                 cur->keys = {cur->keys[cur->keys.size()/2]};
-                cur->children = {};
+                lastKeys.erase(lastKeys.begin());
+                cur->children.clear();
+
                 cur->children.push_back(insertNode(cur, firstBnbs, firstKeys, firstKids));
                 cur->children.push_back(insertNode(cur, lastBnbs, lastKeys, lastKids));
+
+                return true;
             } else {
                 vector<Node*> firstKids(cur->children.begin(), cur->children.begin()+ cur->children.size()/2);
                 vector<Node*> lastKids(cur->children.begin()+ cur->children.size()/2 +1, cur->children.end());
@@ -221,13 +245,17 @@ public:
                 cur->bnbs = firstBnbs;
                 cur->children = firstKids;
                 insertNode(cur->parent, lastBnbs, lastKeys, lastKids);
+                balance(cur->parent);
+                return true;
             }
-            balance(cur->parent);
+
         }
+        return false; //didn't have to balance anything
     }
     bool insert(const string&  n, const string& c, const string& p, const string& room, const string& rev, string ac, const string& bath, const string& bedroom, const string& bed, const string& a) {
         float key;
         if (sortKey == "price") {
+
             key = stof(p);
         } else if (sortKey == "bedrooms") {
             key = stof(bedroom);
@@ -237,6 +265,7 @@ public:
             cout<< "Error: invalid key value. User sorted with: "<< sortKey<< endl;
             return false;
         }
+        cout<< "Key = "<< key<< endl;
         if (root == nullptr) {
             root = new Node(key, n, c, p, room, rev, ac, bath, bedroom, bed, a);
             head = root;
@@ -249,53 +278,40 @@ public:
             if (curNode->isLeaf) {
                 break;
             }
-            int mid = curNode->keys.size()/2;
-            for (int i=0; i<curNode->keys.size(); i++) {
-                if ((key > curNode->keys[mid])) {
-                    if (mid == curNode->keys.size()-1) {
-                        curNode = curNode->children[i+1];
-                        break;
-                    }
-                    i = mid;
-                    mid = (curNode->keys.size()+mid)/2;
-                } else if (key < curNode->keys[mid]) {
-                    mid = (i+mid)/2;
-                } else if (key == curNode->keys[mid]) {
-                    curNode = curNode->children[i];
-                    break;
-                }
 
-                if (key <= curNode->keys[i]) {
-                    if (curNode->children.size() > i) {
-                        curNode = curNode->children[i];
-                    } else {
-                        cout<< "Error: children smaller than current key index"<< endl;
-                        return false;
-                    }
-                } else if (key > curNode->keys[i]) {
-                    if (i == curNode->keys.size()-1) {
-                        if (curNode->children.size() > i) {
-                            curNode = curNode->children[i+1];
-                        }
-                    }
+            int leftIndex = 0;
+            int rightIndex= curNode->keys.size()-1;
+
+            while (leftIndex <= rightIndex) {
+                int midIndex = (leftIndex + rightIndex)/2;
+                if (key < curNode->keys[midIndex]) {
+                    rightIndex = midIndex - 1;
+                } else {
+                    leftIndex = midIndex +1;
                 }
             }
+            curNode = curNode->children[leftIndex];
         }
         //does actual insertion into node
         //curNode = inserting node
+        cout<< "Current inserting node = ";
+        for (float k: curNode->keys) {
+            cout<< k << " ";
+        }
+        cout<< endl;
         for (int i = 0; i< curNode->keys.size(); i++) {
-            if (key <= i) {
+            if (key <= curNode->keys[i]) {
                 curNode->keys.insert(curNode->keys.begin()+i, key);
                 curNode->insert(i, n, c, p, room, rev, ac, bath, bedroom, bed, a);
                 balance(curNode);
                 return true;
-            }else if ((key > i) && (i == curNode->keys.size())) {
-                curNode->keys.insert(curNode->keys.begin() +curNode->keys.size(), key);
-                curNode->insert(curNode->keys.size(), n, c, p, room, rev, ac, bath, bedroom, bed, a);
-                balance(curNode);
-                return true;
             }
         }
+        curNode->keys.insert(curNode->keys.begin() +curNode->keys.size(), key);
+        curNode->insert(curNode->keys.size()-1, n, c, p, room, rev, ac, bath, bedroom, bed, a);
+
+        balance(curNode);
+        return true;
 
         cout<< "Insert error: something went wrong, insertion not completed."<< endl;
         return false;
@@ -303,15 +319,29 @@ public:
 
     void inOrderLL() {
         //node root has vector of node keys
-        Node* curr = root;
-        while (root != nullptr) {
+        Node* curr = head;
+        cout<< "--------LL traversal:---------"<< endl;
+        while (curr != nullptr) {
             cout<< "Node: ";
-            for (float k: curr->keys) {
-                cout<< k<< " ";
+            for (float f: curr->keys) {
+                cout<< f << " ";
             }
             cout<< endl;
-            root = root->next;
+            curr = curr->next;
         }
+        cout<< "--------------------Tree traversal:-------------------"<< endl;
+        printTree(root);
+    }
+    void printTree(Node* cur) {
+        cout<< "Keys: ";
+        for (float k: cur->keys) {
+            cout<< k<< " ";
+        }
+        cout<< "\nChildren:"<< endl;
+        for (Node* n: cur->children) {
+            printTree(n);
+        }
+        cout<< "--------end of subtree--------"<< endl;
     }
     void reSort() {
         cout<< "Re-sorting !"<< endl;
@@ -337,8 +367,9 @@ public:
 
 
 int main() {
-    // bPlusTree testing(3, "price", "testingCSV.csv");
+    // bPlusTreeOG testing(3, "price", "testingCSV.csv");
     // testing.inOrderLL();
-    cout<< "test";
-    return 0;
+    // testing.sortBy("bedrooms");
+    // testing.inOrderLL();
+    // return 0;
 }
