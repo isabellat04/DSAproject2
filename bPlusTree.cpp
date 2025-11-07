@@ -317,20 +317,21 @@ public:
         return false;
     }
 
-    void inOrderLL() {
+    vector<Node*> inOrderLL() {
         //node root has vector of node keys
+        vector<Node*> ret;
         Node* curr = head;
-        cout<< "--------LL traversal:---------"<< endl;
+        //cout<< "--------LL traversal:---------"<< endl;
         while (curr != nullptr) {
-            cout<< "Node: ";
-            for (float f: curr->keys) {
-                cout<< f << " ";
-            }
-            cout<< endl;
+            //cout<< "Node: ";
+            // for (float f: curr->keys) {
+            //     cout<< f << " ";
+            // }
+            //cout<< endl;
+            ret.push_back(curr);
             curr = curr->next;
         }
-        cout<< "--------------------Tree traversal:-------------------"<< endl;
-        printTree(root);
+        return ret;
     }
     void printTree(Node* cur) {
         cout<< "Keys: ";
