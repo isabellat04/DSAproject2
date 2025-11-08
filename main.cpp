@@ -8,8 +8,11 @@
 #include <cfloat>
 #include "bPlusTree.cpp"
 
+#include <chrono>
 using namespace std;
 
+// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 struct Property_Listing {
     int id;
     std::string name;
@@ -304,6 +307,8 @@ class MinHeapStruct {
         }
 
         void heapSortAscendingPrice() {
+            // The clock time code for all methods was inspired from Stack Overflow
+            auto start_clock = chrono::high_resolution_clock::now(); // this is used to check time for how long to process
             int store_size = heap_size;
             createMaxHeapPrice(heap_size); // create max heap first
             while (store_size > 1) {
@@ -313,9 +318,13 @@ class MinHeapStruct {
                 store_size = store_size - 1;
                 heapifyDownMaxPrice(currHeap ,0, store_size);
             }
+            auto end_clock = chrono::high_resolution_clock::now();
+            chrono::duration<float> duration = end_clock-start_clock;
+            cout << "Time for heaps: " << duration.count() << " seconds" << std::endl;
         }
 
         void heapSortDescendingPrice() {
+            auto start_clock = std::chrono::high_resolution_clock::now();
             int store_size = heap_size;
             createMinHeapPrice(heap_size); // crete min heap first
             while (store_size > 1) {
@@ -325,9 +334,13 @@ class MinHeapStruct {
                 store_size = store_size - 1;
                 heapifyDownMinPrice(currHeap, 0, store_size);
             }
+            auto end_clock = std::chrono::high_resolution_clock::now();
+            chrono::duration<float> duration = end_clock-start_clock;
+            std::cout << "Time for heaps: " << duration.count() << " seconds" << std::endl;
         }
 
         void heapSortAscendingBathrooms() {
+            auto start_clock = std::chrono::high_resolution_clock::now();
             int store_size = heap_size;
             createMaxHeapBathroom(heap_size); // create max heap first
             while (store_size > 1) {
@@ -337,9 +350,13 @@ class MinHeapStruct {
                 store_size = store_size - 1;
                 heapifyDownMaxBathrooms(currHeap ,0, store_size);
             }
+            auto end_clock = std::chrono::high_resolution_clock::now();
+            chrono::duration<float> duration = end_clock-start_clock;
+            std::cout << "Time for heaps: " << duration.count() << " seconds" << std::endl;
         }
 
         void heapSortDescendingBathrooms() {
+            auto start_clock = std::chrono::high_resolution_clock::now();
             int store_size = heap_size;
             createMinHeapBathroom(heap_size); // crete min heap first
             while (store_size > 1) {
@@ -349,9 +366,13 @@ class MinHeapStruct {
                 store_size = store_size - 1;
                 heapifyDownMinBathrooms(currHeap, 0, store_size);
             }
+            auto end_clock = std::chrono::high_resolution_clock::now();
+            chrono::duration<float> duration = end_clock-start_clock;
+            std::cout << "Time for heaps: " << duration.count() << " seconds" << std::endl;
         }
 
         void heapSortAscendingBedrooms() {
+            auto start_clock = std::chrono::high_resolution_clock::now();
             int store_size = heap_size;
             createMaxHeapBedroom(heap_size); // create max heap first
             while (store_size > 1) {
@@ -361,9 +382,13 @@ class MinHeapStruct {
                 store_size = store_size - 1;
                 heapifyDownMaxBedrooms(currHeap ,0, store_size);
             }
+            auto end_clock = std::chrono::high_resolution_clock::now();
+            chrono::duration<float> duration = end_clock-start_clock;
+            std::cout << "Time for heaps: " << duration.count() << " seconds" << std::endl;
         }
 
         void heapSortDescendingBedrooms() {
+            auto start_clock = std::chrono::high_resolution_clock::now();
             int store_size = heap_size;
             createMinHeapBedroom(heap_size); // crete min heap first
             while (store_size > 1) {
@@ -373,69 +398,90 @@ class MinHeapStruct {
                 store_size = store_size - 1;
                 heapifyDownMinBedrooms(currHeap, 0, store_size);
             }
+            auto end_clock = std::chrono::high_resolution_clock::now();
+            chrono::duration<float> duration = end_clock-start_clock;
+            std::cout << "Time for heaps: " << duration.count() << " seconds" << std::endl;
         }
 
-        void findKthLargestPrice(int k) {
+        vector<Property_Listing> findKthLargestPrice(int k) {
+            vector<Property_Listing> largest_holder;
+            if (k == 0 || k > currHeap.size()) {
+                cout << "Please input a number greater than 0 or less than number of entries" << endl;
+                return largest_holder;
+            }
             heapSortDescendingPrice(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int count_switch = 1;
-            int index = 1;
+            int placeHolder = -1;
+            int count_switch = 0;
+            int index = 0;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].price != temp.price) {
+                if (currHeap[index].price != placeHolder) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
+                    placeHolder = currHeap[index].price;
                 }
 
                 if (count_switch == k) {
-                    cout << temp.price << endl;
+                    largest_holder.push_back(currHeap[index]);
+                    //cout << temp.price << endl;
                 }
                 index++;
             }
-            if ((count_switch-1) != k) {
-                cout << "Couldn't find the kth largest price" << endl;
-            }
+            return largest_holder;
         }
 
-        void findKthLargestBathroom(int k) {
+        vector<Property_Listing> findKthLargestBathroom(int k) {
+            vector<Property_Listing> largest_holder;
+            if (k == 0 || k > currHeap.size()) {
+                cout << "Please input a number greater than 0 or less than number of entries" << endl;
+                return largest_holder;
+            }
             heapSortDescendingBathrooms(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int count_switch = 1;
-            int index = 1;
+            int placeHolder = -1;
+            int count_switch = 0;
+            int index = 0;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].bathrooms != temp.bathrooms) {
+                if (currHeap[index].bathrooms != placeHolder) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
+                    placeHolder = currHeap[index].bathrooms;
                 }
 
                 if (count_switch == k) {
-                    cout << temp.bathrooms << endl;
+                    largest_holder.push_back(currHeap[index]);
+                    //cout << temp.bathrooms << endl;
                 }
                 index++;
             }
-            if ((count_switch-1) != k) {
-                cout << "Couldn't find the kth largest number of bathrooms" << endl;
-            }
+            return largest_holder;
         }
 
-        void findKthLargestBedrooms(int k) {
+        vector<Property_Listing> findKthLargestBedrooms(int k) {
+            vector<Property_Listing> largest_holder;
+            if (k == 0 || k > currHeap.size()) {
+                cout << "Please input a number greater than 0 or less than number of entries" << endl;
+                return largest_holder;
+            }
             heapSortDescendingBedrooms(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int count_switch = 1;
-            int index = 1;
+            int placeHolder = -1;
+            int count_switch = 0;
+            int index = 0;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].bedrooms != temp.bedrooms) {
+                if (currHeap[index].bedrooms != placeHolder) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
+                    placeHolder = currHeap[index].bedrooms;
                 }
 
                 if (count_switch == k) {
-                    cout << temp.bedrooms << endl;
+                    largest_holder.push_back(currHeap[index]);
+                    //cout << temp.bedrooms << endl;
                 }
                 index++;
             }
-            if ((count_switch-1) != k) {
-                cout << "Couldn't find the kth largest number of bedrooms" << endl;
-            }
+            return largest_holder;
         }
 
         int getCurrentSize() {
@@ -452,6 +498,7 @@ int main() {
     // <b>lang</b> variable name to see how CLion can help you rename it.
     std::string filename = "Airbnb_data.csv"; // Make sure this is the correct file name!
     std::ifstream file(filename);
+
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open the file '" << filename << "'" << std::endl;
@@ -841,4 +888,3 @@ while (window.isOpen()) {
 
     return 0;
 }
-
