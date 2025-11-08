@@ -3,9 +3,10 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <chrono>
 using namespace std;
 
-class bPlusTreeOG {
+class bPlusTree{
     struct Node {
         //individual keys + listings
         struct listing {
@@ -70,16 +71,17 @@ class bPlusTreeOG {
             bnbs.insert(bnbs.begin()+i, l);
         }
 
-
     };
     Node* root; //actual tree root
     Node* head; // linked list
     string sortKey; // either "price", "bedrooms", or "bathrooms"
     int num; //max num of nodes (n-ary)
     string fileName;
+    float elapsedTime;
 
     void buildTree(string f) {
         ifstream file(f);
+        auto start = chrono::high_resolution_clock::now();
         if (!file.is_open()) {
             cout<< "Error: file not open"<< endl;
         } else {
@@ -109,10 +111,14 @@ class bPlusTreeOG {
 
             }
         }
+        auto end = chrono::high_resolution_clock::now();
+        chrono::duration<float> duration = end-start;
+        elapsedTime = duration.count();
+        cout<< "Elapsed time = "<< elapsedTime<< endl;
     }
 
 public:
-    bPlusTreeOG(const int& n, const string& key, string f) {
+    bPlusTree(const int& n, const string& key, string f) {
         fileName = f;
         root = nullptr;
         head = nullptr;
@@ -120,9 +126,8 @@ public:
         num = n;
         buildTree(fileName);
     }
-    ~bPlusTreeOG() {
+    ~bPlusTree() {
         deleteSubTree(root);
-        //head = nullptr;
     }
 
     void deleteSubTree(Node* cur){
@@ -134,6 +139,10 @@ public:
             cur = nullptr;
         }
 
+    }
+
+    float getElapsedTime() {
+        return elapsedTime;
     }
 
     //sets the actual key to sort by:
@@ -346,7 +355,7 @@ public:
 
 
 int main() {
-    // bPlusTreeOG testing(3, "price", "testingCSV.csv");
+    // bPlusTree testing(3, "price", "testingCSV.csv");
     // testing.inOrderLL();
     // testing.sortBy("bedrooms");
     // testing.inOrderLL();
