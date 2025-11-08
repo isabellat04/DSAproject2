@@ -114,7 +114,7 @@ class bPlusTree{
         auto end = chrono::high_resolution_clock::now();
         chrono::duration<float> duration = end-start;
         elapsedTime = duration.count();
-        cout<< "Elapsed time = "<< elapsedTime<< endl;
+        cout<< "Elapsed time in B Plus Tree= "<< elapsedTime<< endl;
     }
 
 public:
