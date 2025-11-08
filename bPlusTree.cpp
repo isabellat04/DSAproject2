@@ -104,7 +104,6 @@ class bPlusTreeOG {
                     getline(s, bedroomCount, ',');
                     getline(s, bedCount, ',');
                     getline(s, area, ',');
-                    cout<< name<< "   ";
                     insert(name, city, price, room, reviews, ac, bathCount, bedroomCount, bedCount, area);
                 }
 
@@ -187,14 +186,12 @@ public:
     }
     bool balance(Node* cur) {
         if (cur->keys.size() == num) {
-            cout<< "------------------Unbalanced------------------"<< endl;
             vector<float> lastKeys(cur->keys.begin()+ cur->keys.size()/2, cur->keys.end()); // <--used for splitting keys
             vector<float> firstKeys(cur->keys.begin(), cur->keys.begin()+ cur->keys.size()/2); // <--used for splitting keys
             vector<Node::listing> lastBnbs(cur->bnbs.begin()+ cur->bnbs.size()/2, cur->bnbs.end());
             vector<Node::listing> firstBnbs(cur->bnbs.begin(), cur->bnbs.begin()+ cur->bnbs.size()/2);
 
             if (root == head) {
-                cout<< "\nBase case root = head"<< endl;
                 //split node in half, middle goes up to become root
                 //set leaves to be LL
                 cur->keys = {lastKeys[0]};
@@ -209,7 +206,6 @@ public:
                 balance(cur);
                 return true;
             } else if (cur->isLeaf) {
-                cout<< "Case cur = leaf"<< endl;
                 int i = insertionIndex(cur->parent->keys, lastKeys[0]);
                 cur->parent->keys.insert(cur->parent->keys.begin() + i, lastKeys[0]);
                 cur->parent->bnbs.insert(cur->parent->bnbs.begin() + i, lastBnbs[0]);
@@ -222,8 +218,6 @@ public:
                 balance(cur->parent);
                 return true;
             } else if (cur == root) {
-                cout<< "Case cur = root\n"<< endl;
-
                 vector<Node*> firstKids(cur->children.begin(), cur->children.begin()+ cur->children.size()/2);
                 vector<Node*> lastKids(cur->children.begin()+ cur->children.size()/2, cur->children.end());
                 cur->keys = {cur->keys[cur->keys.size()/2]};
@@ -265,7 +259,6 @@ public:
             cout<< "Error: invalid key value. User sorted with: "<< sortKey<< endl;
             return false;
         }
-        cout<< "Key = "<< key<< endl;
         if (root == nullptr) {
             root = new Node(key, n, c, p, room, rev, ac, bath, bedroom, bed, a);
             head = root;
@@ -294,11 +287,6 @@ public:
         }
         //does actual insertion into node
         //curNode = inserting node
-        cout<< "Current inserting node = ";
-        for (float k: curNode->keys) {
-            cout<< k << " ";
-        }
-        cout<< endl;
         for (int i = 0; i< curNode->keys.size(); i++) {
             if (key <= curNode->keys[i]) {
                 curNode->keys.insert(curNode->keys.begin()+i, key);
@@ -312,22 +300,13 @@ public:
 
         balance(curNode);
         return true;
-
-        cout<< "Insert error: something went wrong, insertion not completed."<< endl;
-        return false;
     }
 
     vector<Node*> inOrderLL() {
         //node root has vector of node keys
         vector<Node*> ret;
         Node* curr = head;
-        //cout<< "--------LL traversal:---------"<< endl;
         while (curr != nullptr) {
-            //cout<< "Node: ";
-            // for (float f: curr->keys) {
-            //     cout<< f << " ";
-            // }
-            //cout<< endl;
             ret.push_back(curr);
             curr = curr->next;
         }
@@ -345,7 +324,6 @@ public:
         cout<< "--------end of subtree--------"<< endl;
     }
     void reSort() {
-        cout<< "Re-sorting !"<< endl;
         deleteSubTree(root);
         root = nullptr;
         head = nullptr;
