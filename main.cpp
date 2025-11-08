@@ -1,14 +1,15 @@
 #include <iostream>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <iomanip>
+#include <SFML/Graphics.hpp>
+#include <cfloat>
+#include "bPlusTree.cpp"
+
 using namespace std;
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 struct Property_Listing {
     int id;
     std::string name;
@@ -374,85 +375,67 @@ class MinHeapStruct {
             }
         }
 
-        vector<Property_Listing> findKthLargestPrice(int k) {
-            vector<Property_Listing> largest_holder;
-            if (k == 0 || k > currHeap.size()) {
-                cout << "Please input a number greater than 0 or less than number of entries" << endl;
-                return largest_holder;
-            }
+        void findKthLargestPrice(int k) {
             heapSortDescendingPrice(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int placeHolder = -1;
-            int count_switch = 0;
-            int index = 0;
+            int count_switch = 1;
+            int index = 1;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].price != placeHolder) {
+                if (currHeap[index].price != temp.price) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
-                    placeHolder = currHeap[index].price;
                 }
 
                 if (count_switch == k) {
-                    largest_holder.push_back(currHeap[index]);
-                    //cout << temp.price << endl;
+                    cout << temp.price << endl;
                 }
                 index++;
             }
-            return largest_holder;
+            if ((count_switch-1) != k) {
+                cout << "Couldn't find the kth largest price" << endl;
+            }
         }
 
-        vector<Property_Listing> findKthLargestBathroom(int k) {
-            vector<Property_Listing> largest_holder;
-            if (k == 0 || k > currHeap.size()) {
-                cout << "Please input a number greater than 0 or less than number of entries" << endl;
-                return largest_holder;
-            }
+        void findKthLargestBathroom(int k) {
             heapSortDescendingBathrooms(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int placeHolder = -1;
-            int count_switch = 0;
-            int index = 0;
+            int count_switch = 1;
+            int index = 1;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].bathrooms != placeHolder) {
+                if (currHeap[index].bathrooms != temp.bathrooms) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
-                    placeHolder = currHeap[index].bathrooms;
                 }
 
                 if (count_switch == k) {
-                    largest_holder.push_back(currHeap[index]);
-                    //cout << temp.bathrooms << endl;
+                    cout << temp.bathrooms << endl;
                 }
                 index++;
             }
-            return largest_holder;
+            if ((count_switch-1) != k) {
+                cout << "Couldn't find the kth largest number of bathrooms" << endl;
+            }
         }
 
-        vector<Property_Listing> findKthLargestBedrooms(int k) {
-            vector<Property_Listing> largest_holder;
-            if (k == 0 || k > currHeap.size()) {
-                cout << "Please input a number greater than 0 or less than number of entries" << endl;
-                return largest_holder;
-            }
+        void findKthLargestBedrooms(int k) {
             heapSortDescendingBedrooms(); // first sort current heap into descending order according to attribute
             Property_Listing temp = currHeap[0]; // initial object to compare
-            int placeHolder = -1;
-            int count_switch = 0;
-            int index = 0;
+            int count_switch = 1;
+            int index = 1;
             while (count_switch <= k && index < heap_size) {
-                if (currHeap[index].bedrooms != placeHolder) {
+                if (currHeap[index].bedrooms != temp.bedrooms) {
                     count_switch = count_switch + 1;
                     temp = currHeap[index];
-                    placeHolder = currHeap[index].bedrooms;
                 }
 
                 if (count_switch == k) {
-                    largest_holder.push_back(currHeap[index]);
-                    //cout << temp.bedrooms << endl;
+                    cout << temp.bedrooms << endl;
                 }
                 index++;
             }
-            return largest_holder;
+            if ((count_switch-1) != k) {
+                cout << "Couldn't find the kth largest number of bedrooms" << endl;
+            }
         }
 
         int getCurrentSize() {
@@ -545,21 +528,317 @@ int main() {
     //    cout << minHeap[i].price << endl;
     //}
 
-    minHeapStruct.heapSortAscendingBedrooms();
+    minHeapStruct.heapSortAscendingPrice();
     //minHeapStruct.heapSortDescendingPrice(); // test if global heap is changing according to commands called
     vector<Property_Listing> minHeap = minHeapStruct.getCurrentHeap();
     for (int i = 0; i < minHeapStruct.getCurrentSize(); i++) {
-        cout << minHeap[i].bedrooms << endl;
+        cout << minHeap[i].price << endl;
     }
 
-    vector<Property_Listing> store_largest_nth = minHeapStruct.findKthLargestBedrooms(2);
-    for (int i = 0; i < store_largest_nth.size(); i++) {
-        cout << store_largest_nth[i].bedrooms << endl;
-    }
-    //return 0;
+    minHeapStruct.findKthLargestBedrooms(2);
+
+
+//sfml visuals
+//create window
+sf::RenderWindow window(sf::VideoMode(1850, 900), "Home-inator: Housing Property Finder");
+    //generate font
+sf::Font font;
+if (!font.loadFromFile("font.ttf")) {
+    cout << "Error loading font!" << endl;
+    return 1;
 }
 
-// TIP See CLion help at <a
-// href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>.
-//  Also, you can try interactive lessons for CLion by selecting
-//  'Help | Learn IDE Features' from the main menu.
+//tabs
+vector<string> tabs = {"Menu", "Sort Price", "Sort Bedrooms", "Sort Bathrooms", "Search Location"};
+int currentTab = 0;
+
+vector<sf::RectangleShape> tabButtons;
+vector<sf::Text> tabTexts;
+float tabX = 100;
+for (int i = 0; i < tabs.size(); i++) {
+    sf::RectangleShape tab(sf::Vector2f(200, 40));
+    tab.setPosition(tabX, 20);
+    tab.setOutlineColor(sf::Color::Black);
+    tab.setOutlineThickness(2);
+    tabButtons.push_back(tab);
+
+    sf::Text text(tabs[i], font, 18);
+    text.setFillColor(sf::Color::Black);
+    text.setPosition(tabX + 20, 25);
+    tabTexts.push_back(text);
+
+    tabX += 210;
+}
+
+//title
+sf::Text title("Home-inator: Housing Property Finder", font, 28);
+title.setFillColor(sf::Color::Black);
+title.setPosition(320, 90);
+
+//all input boxes
+sf::RectangleShape inputBoxes[7];
+sf::Text inputTexts[7];
+std::string inputStrings[7];
+std::string featureNames[7] = {"Min Price", "Max Price", "Min Bedrooms", "Max Bedrooms", "Min Baths", "Max Baths", "Location"};
+
+for (int i = 0; i < 7; i++) {
+    inputBoxes[i].setSize(sf::Vector2f(200, 30));
+    inputBoxes[i].setPosition(30 + (i % 2) * 250, 170 + (i / 2) * 70);
+    inputBoxes[i].setFillColor(sf::Color::White);
+    inputBoxes[i].setOutlineColor(sf::Color::Black);
+    inputBoxes[i].setOutlineThickness(1);
+
+    inputTexts[i].setFont(font);
+    inputTexts[i].setCharacterSize(18);
+    inputTexts[i].setFillColor(sf::Color::Black);
+    inputTexts[i].setPosition(inputBoxes[i].getPosition().x + 10, inputBoxes[i].getPosition().y + 5);
+}
+
+//labels for input boxes
+vector<sf::Text> labels;
+for (int i = 0; i < 7; i++) {
+    sf::Text label(featureNames[i], font, 18);
+    label.setFillColor(sf::Color::Black);
+    label.setPosition(inputBoxes[i].getPosition().x, inputBoxes[i].getPosition().y - 25);
+    labels.push_back(label);
+}
+
+//create list button
+sf::RectangleShape calcButton(sf::Vector2f(290, 45));
+calcButton.setPosition(150, 530);
+calcButton.setFillColor(sf::Color(200, 220, 255));
+calcButton.setOutlineColor(sf::Color::Black);
+calcButton.setOutlineThickness(2);
+
+sf::Text calcText("Calculate and Create List", font, 18);
+calcText.setFillColor(sf::Color::Black);
+calcText.setPosition(160, 540);
+//where the listings are being printed
+sf::RectangleShape listPanel(sf::Vector2f(1300, 600));
+listPanel.setPosition(530, 160);
+listPanel.setFillColor(sf::Color(240, 240, 240));
+listPanel.setOutlineColor(sf::Color::Black);
+listPanel.setOutlineThickness(2);
+
+vector<sf::Text> listingTexts;
+vector<Property_Listing> listings = minHeapStruct.getCurrentHeap();
+
+
+int activeBox = -1;
+sf::Clock cursorClock;
+bool showCursor = false;
+
+
+sf::Text subTitle("", font, 22);
+subTitle.setFillColor(sf::Color(70, 70, 70));
+subTitle.setPosition(980, 120);
+
+while (window.isOpen()) {
+    sf::Event event;
+    while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed)
+            window.close();
+
+        if (event.type == sf::Event::MouseButtonPressed) {
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+
+            //tab switching
+            for (int i = 0; i < tabButtons.size(); i++) {
+                if (tabButtons[i].getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                    currentTab = i;
+                    listingTexts.clear();
+                }
+            }
+
+            //checks if an input button was clicked on
+            activeBox = -1;
+            for (int i = 0; i < 7; i++) {
+                if (inputBoxes[i].getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                    activeBox = i;
+                }
+            }
+
+            //creates list when button is clicked
+            if (calcButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                listingTexts.clear();
+                vector<Property_Listing> sorted = listings;
+                int minPrice = 0;
+                int maxPrice = INT_MAX;
+                float minBedrooms = 0;
+                float maxBedrooms = FLT_MAX;
+                float minBath = 0;
+                float maxBath = FLT_MAX;
+                if (!inputStrings[0].empty()) {
+                    minPrice = stoi(inputStrings[0]);
+                }
+                if (!inputStrings[1].empty()) {
+                    maxPrice = stoi(inputStrings[1]);
+                }
+                if (!inputStrings[2].empty()) {
+                    minBedrooms = stoi(inputStrings[2]);
+                }
+                if (!inputStrings[3].empty()) {
+                    maxBedrooms = stoi(inputStrings[3]);
+                }
+                if (!inputStrings[4].empty()) {
+                    minBath = stof(inputStrings[4]);
+                }
+                if (!inputStrings[5].empty()) {
+                    maxBath = stof(inputStrings[5]);
+                }
+
+                //each type of sort per tab
+                if (currentTab == 1) {
+                    minHeapStruct.heapSortAscendingPrice();
+                    sorted = minHeapStruct.getCurrentHeap();
+                    subTitle.setString("Sorted by Price (Ascending)");
+                }
+                else if (currentTab == 2) {
+                    minHeapStruct.heapSortAscendingBedrooms();
+                    sorted = minHeapStruct.getCurrentHeap();
+                    subTitle.setString("Sorted by Bedrooms (Ascending)");
+                }
+                else if (currentTab == 3) {
+                    minHeapStruct.heapSortAscendingBathrooms();
+                    sorted = minHeapStruct.getCurrentHeap();
+                    subTitle.setString("Sorted by Bathrooms (Ascending)");
+                }
+                else if (currentTab == 4) {
+                    string location = inputStrings[6];
+                    sorted.clear();
+                    subTitle.setString("Filtered by Location: " + location);
+
+                    //matches listing location area even if its lowercase/uppercase
+                    for (auto &p : listings) {
+                        string lowerCity = p.city;
+                        string lowerArea = p.area;
+                        string lowerLoc = location;
+                        for (int i=0; i<lowerCity.size(); i++) {
+                            lowerCity[i] = tolower(lowerCity[i]);
+                        }
+                        for (int i =0; i<lowerArea.size(); i++) {
+                            lowerArea[i] = tolower(lowerArea[i]);
+                        }
+                        for (int i=0; i<lowerLoc.size(); i++) {
+                            lowerLoc[i] = tolower(lowerLoc[i]);
+                        }
+                        if (lowerCity.find(lowerLoc) != string::npos || lowerArea.find(lowerLoc) != string::npos)
+                            sorted.push_back(p);
+                    }
+                }
+                //prints the filtered vector
+                vector<Property_Listing> filtered;
+                for (auto &p : sorted) {
+                    bool priceOK = (p.price >= minPrice && p.price <= maxPrice);
+                    bool bathOK = (p.bathrooms >= minBath && p.bathrooms <= maxBath);
+                    bool bedroomOK = (p.bedrooms >= minBedrooms && p.bedrooms <= maxBedrooms);
+                    if (priceOK && bathOK&& bedroomOK) {
+                        filtered.push_back(p);
+                    }
+                }
+                //if no listings match specfied filters
+                if (filtered.empty()) {
+                    sf::Text none("No listings match your filters.", font, 18);
+                    none.setFillColor(sf::Color::Red);
+                    none.setPosition(540, 170);
+                    listingTexts.push_back(none);
+                } else {
+                    //prints listings
+                    for (int i = 0; i < filtered.size() && i < 14; i++) {
+                        string info = filtered[i].name +
+                            " | $" + to_string(filtered[i].price) +
+                            " | Bedrooms: " + to_string(filtered[i].bedrooms) +
+                            " | Baths: " + to_string(filtered[i].bathrooms) +
+                            " | Acc: " + to_string(filtered[i].accommodates) +
+                            " | Reviews: " + to_string(filtered[i].total_reviewers) +
+                            " | " + filtered[i].city +
+                            ", " + filtered[i].area;
+
+                        sf::Text listing(info, font, 16);
+                        listing.setFillColor(sf::Color::Black);
+                        listing.setPosition(540, 170 + i * 30);
+                        listingTexts.push_back(listing);
+                    }
+                }
+            }
+        }
+
+        //typing in input box
+        if (event.type == sf::Event::TextEntered && activeBox != -1) {
+            if (event.text.unicode == 8) { // backspace
+                if (!inputStrings[activeBox].empty())
+                    inputStrings[activeBox].pop_back();
+            } else if (event.text.unicode < 128 && event.text.unicode != 13) {
+                inputStrings[activeBox] += static_cast<char>(event.text.unicode);
+            }
+            inputTexts[activeBox].setString(inputStrings[activeBox]);
+        }
+    }
+
+    if (cursorClock.getElapsedTime().asSeconds() > 0.5f) {
+        showCursor = !showCursor;
+        cursorClock.restart();
+    }
+
+    window.clear(sf::Color::White);
+
+    for (int i = 0; i < tabButtons.size(); i++) {
+        tabButtons[i].setFillColor(i == currentTab ? sf::Color(180, 200, 255) : sf::Color(230, 230, 230));
+        window.draw(tabButtons[i]);
+        window.draw(tabTexts[i]);
+    }
+
+    window.draw(title);
+
+    if (currentTab == 0) {
+        sf::Text menuText("Welcome to Home-inator!\nSelect a tab to sort or search listings.", font, 22);
+        menuText.setFillColor(sf::Color::Black);
+        menuText.setPosition(330, 300);
+        window.draw(menuText);
+    } else {
+        //only shows relevant input boxes
+        for (int i = 0; i < 7; i++) {
+            bool visible = false;
+            if (currentTab == 1 && (i == 0 || i == 1)) {
+                visible = true;
+            }
+            if (currentTab == 2 && (i == 2 || i == 3)) {
+                visible = true;
+            }
+            if (currentTab == 3 && (i == 4 || i == 5)) {
+                visible = true;
+            }
+            if (currentTab == 4 && i == 6) {
+                visible = true;
+            }
+            //draws the correct input boxes for each tab
+            if (visible) {
+                inputBoxes[i].setOutlineColor(i == activeBox ? sf::Color::Blue : sf::Color::Black);
+                window.draw(inputBoxes[i]);
+                window.draw(inputTexts[i]);
+                window.draw(labels[i]);
+                if (i == activeBox && showCursor) {
+                    sf::RectangleShape cursor(sf::Vector2f(2, 20));
+                    cursor.setFillColor(sf::Color::Black);
+                    cursor.setPosition(inputTexts[i].getPosition().x + inputTexts[i].getLocalBounds().width + 2,
+                                       inputTexts[i].getPosition().y + 5);
+                    window.draw(cursor);
+                }
+            }
+        }
+
+        window.draw(calcButton);
+        window.draw(calcText);
+        window.draw(listPanel);
+        window.draw(subTitle);
+
+        for (auto &t : listingTexts)
+            window.draw(t);
+    }
+
+    window.display();
+}
+
+    return 0;
+}
+
