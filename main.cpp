@@ -498,7 +498,11 @@ int main() {
     // <b>lang</b> variable name to see how CLion can help you rename it.
     std::string filename = "Airbnb_data.csv"; // Make sure this is the correct file name!
     std::ifstream file(filename);
+     bPlusTree tree(3, "price", "Airbnb_data.csv");
 
+    float elapsed = tree.getElapsedTime();
+
+    cout << "Time for B+ tree =" << elapsed << " seconds" << endl;
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open the file '" << filename << "'" << std::endl;
