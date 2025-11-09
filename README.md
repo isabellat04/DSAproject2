@@ -1,11 +1,11 @@
 <H1> COP3530 - Project 2 </h1>
 
-# 🏠 Housing Property Finder  
+# Housing Property Finder  
 ### Team Name: Home-inators  
 **Team Members:** Anveer Aulakh, Isabella Torres, Nancy Vutuan  
 **Course:** COP 3530 – Data Structures and Algorithms  
 **Project 2**
-## 📖 Overview  
+## Overview  
 The **Housing Property Finder** is a C++ application designed to help users efficiently explore housing and rental properties. Using **data structures such as Heaps and B+ Trees**, the program allows users to quickly filter, compare, and visualize listings based on desired features like price, location, and room type.  
 
 Our goal is to make the property-search process simpler, faster, and more insightful by organizing and visualizing data drawn from real Airbnb listings.
