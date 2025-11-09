@@ -7,7 +7,6 @@
 #include <SFML/Graphics.hpp>
 #include <cfloat>
 #include "bPlusTree.cpp"
-
 #include <chrono>
 using namespace std;
 
@@ -334,6 +333,7 @@ class MinHeapStruct {
                 store_size = store_size - 1;
                 heapifyDownMinPrice(currHeap, 0, store_size);
             }
+
             auto end_clock = std::chrono::high_resolution_clock::now();
             chrono::duration<float> duration = end_clock-start_clock;
             std::cout << "Time for heaps: " << duration.count() << " seconds" << std::endl;
@@ -498,11 +498,7 @@ int main() {
     // <b>lang</b> variable name to see how CLion can help you rename it.
     std::string filename = "Airbnb_data.csv"; // Make sure this is the correct file name!
     std::ifstream file(filename);
-     bPlusTree tree(3, "price", "Airbnb_data.csv");
 
-    float elapsed = tree.getElapsedTime();
-
-    cout << "Time for B+ tree =" << elapsed << " seconds" << endl;
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open the file '" << filename << "'" << std::endl;
@@ -581,12 +577,6 @@ int main() {
 
     minHeapStruct.heapSortAscendingPrice();
     //minHeapStruct.heapSortDescendingPrice(); // test if global heap is changing according to commands called
-    vector<Property_Listing> minHeap = minHeapStruct.getCurrentHeap();
-    for (int i = 0; i < minHeapStruct.getCurrentSize(); i++) {
-        cout << minHeap[i].price << endl;
-    }
-
-    minHeapStruct.findKthLargestBedrooms(2);
 
 
 //sfml visuals
@@ -743,16 +733,19 @@ while (window.isOpen()) {
                     minHeapStruct.heapSortAscendingPrice();
                     sorted = minHeapStruct.getCurrentHeap();
                     subTitle.setString("Sorted by Price (Ascending)");
+                    bPlusTree tree(256, "price", "Airbnb_data.csv");
                 }
                 else if (currentTab == 2) {
                     minHeapStruct.heapSortAscendingBedrooms();
                     sorted = minHeapStruct.getCurrentHeap();
                     subTitle.setString("Sorted by Bedrooms (Ascending)");
+                    bPlusTree tree(256, "bedrooms", "Airbnb_data.csv");
                 }
                 else if (currentTab == 3) {
                     minHeapStruct.heapSortAscendingBathrooms();
                     sorted = minHeapStruct.getCurrentHeap();
                     subTitle.setString("Sorted by Bathrooms (Ascending)");
+                    bPlusTree tree(256, "bathrooms", "Airbnb_data.csv");
                 }
                 else if (currentTab == 4) {
                     string location = inputStrings[6];
@@ -760,6 +753,7 @@ while (window.isOpen()) {
                     subTitle.setString("Filtered by Location: " + location);
 
                     //matches listing location area even if its lowercase/uppercase
+
                     for (auto &p : listings) {
                         string lowerCity = p.city;
                         string lowerArea = p.area;
